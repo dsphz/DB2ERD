@@ -1,11 +1,11 @@
 using Spectre.Console;
 using Spectre.Console.Cli;
-using SqlServerToPlantUML.Controller;
+using DB2ERD.Controller;
 using System.ComponentModel;
 
 using System.Text.Json;
 
-namespace SqlServerToPlantUML;
+namespace DB2ERD;
 
 internal class Program
 {

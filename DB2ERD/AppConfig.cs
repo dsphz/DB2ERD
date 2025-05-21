@@ -1,4 +1,4 @@
-namespace SqlServerToPlantUML;
+namespace DB2ERD;
 
 /// <summary>
 /// Application configuration loaded from <c>appsettings.json</c>.

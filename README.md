@@ -1,6 +1,8 @@
 # SqlServerToPlantUML
 Generate PlantUML Entity Relationship Diagram From SQL Server Tables
 
+**Updated for .NET 8**
+
 This command line utility parses the tables in SQL server to generate PlantUML syntax to create diagrams of SQL server tables and thier foreign key relationships 
 
 Example Output:
@@ -17,3 +19,11 @@ The PlantUML website also has an online server which you can find [here](https:/
 
 
 Inspiration For this project was from this blogpost: https://raphael-leger.medium.com/automatically-generating-up-to-date-database-diagrams-with-typeorm-d1279a20545e
+
+## Building
+
+Use the [.NET 8 SDK](https://dotnet.microsoft.com/) and run:
+
+```bash
+dotnet build
+```

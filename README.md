@@ -1,9 +1,10 @@
 # SqlServerToPlantUML
-Generate PlantUML Entity Relationship Diagram From SQL Server Tables
 
 **Updated for .NET 8**
 
-This command line utility parses the tables in SQL server to generate PlantUML syntax to create diagrams of SQL server tables and thier foreign key relationships 
+## Project Overview
+
+SqlServerToPlantUML is a lightweight command‑line tool that reads table metadata from a Microsoft SQL Server database and produces a PlantUML description of the schema.  It is useful for DBAs, architects and developers who want to keep Entity Relationship Diagrams (ERDs) in sync with their database without using heavyweight modelling tools.
 
 Example Output:
 
@@ -19,6 +20,12 @@ The PlantUML website also has an online server which you can find [here](https:/
 
 
 Inspiration For this project was from this blogpost: https://raphael-leger.medium.com/automatically-generating-up-to-date-database-diagrams-with-typeorm-d1279a20545e
+
+## Prerequisites
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/)
+- Access to a Microsoft SQL Server instance (2012 or later) with permissions to query `INFORMATION_SCHEMA` and `sys` tables
+- Ability to create files in the working directory for the generated diagram
 
 ## Building
 
@@ -42,3 +49,11 @@ Example `SqlServerToPlantUML/appsettings.json`:
 ```
 
 Update these values to match your environment before running the program.
+
+## Output
+
+The tool writes the PlantUML description to a file (for example `diagram.puml`).  This text file contains the tables and their relationships in PlantUML syntax.  You can feed the file to the [PlantUML](https://plantuml.com/) command line utility or any compatible viewer to generate visual diagrams in formats such as PNG or SVG.
+
+## Supported Databases
+
+The current implementation targets Microsoft SQL Server exclusively.  The code could be adapted for other relational databases, but out‑of‑the‑box support is limited to SQL Server.

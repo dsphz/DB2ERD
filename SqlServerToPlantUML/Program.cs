@@ -2,6 +2,7 @@ using Spectre.Console;
 using Spectre.Console.Cli;
 using SqlServerToPlantUML.Controller;
 using System.ComponentModel;
+
 using System.Text.Json;
 
 namespace SqlServerToPlantUML;

@@ -65,6 +65,12 @@ public class GenerateCommand : Command<GenerateCommand.Settings>
 
         var generator = new GenerateSqlServerTables(connectionString);
         var tables = generator.Execute(query);
+        // add a check for empty tables
+        if (tables == null || tables.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[red]No tables found.[/]");
+            return -1;
+        }
         GeneratePlantUMLDiagram.GenerateAllRelationships(tables, "ERD", settings.Output);
         AnsiConsole.MarkupLine($"Output written to [green]{settings.Output}[/]");
         return 0;

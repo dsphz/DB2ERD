@@ -55,4 +55,14 @@ dotnet SqlServerToPlantUML.dll \
     --output diagram.puml
 ```
 
+Or in PowerShell:
+
+```powershell
+PS> .\SqlServerToPlantUML.exe `
+    --config appsettings.json `
+    --connection-string "Server=.;Database=MyDb;Trusted_Connection=True;" `
+    --table-query "SELECT ..." `
+    --output diagram.puml
+```
+
 If an option is omitted, the value from the specified configuration file is used.

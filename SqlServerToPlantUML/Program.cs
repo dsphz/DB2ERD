@@ -1,48 +1,79 @@
+using Spectre.Console;
+using Spectre.Console.Cli;
 using SqlServerToPlantUML.Controller;
+using System.ComponentModel;
+
 using System.Text.Json;
 
 namespace SqlServerToPlantUML;
 
 internal class Program
 {
-    static void Main(string[] args)
+    public static int Main(string[] args)
     {
-        var configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
-        if (!File.Exists(configPath))
-        {
-            Console.WriteLine($"Configuration file not found: {configPath}");
-            return;
-        }
+        var app = new CommandApp<GenerateCommand>();
+        return app.Run(args);
+    }
+}
 
+public class GenerateCommand : Command<GenerateCommand.Settings>
+{
+    public class Settings : CommandSettings
+    {
+        [CommandOption("-c|--config <FILE>")]
+        [Description("Path to configuration JSON file")] 
+        public string Config { get; set; } = "appsettings.json";
+
+        [CommandOption("--connection-string <STRING>")]
+        [Description("Database connection string")] 
+        public string? ConnectionString { get; set; }
+
+        [CommandOption("--table-query <SQL>")]
+        [Description("SQL query used to list tables")]
+        public string? TableQuery { get; set; }
+
+        [CommandOption("-o|--output <FILE>")]
+        [Description("Output PlantUML file")]
+        public string Output { get; set; } = "output.txt";
+    }
+
+    public override int Execute(CommandContext context, Settings settings)
+    {
         AppConfig? config = null;
-        try
+        if (File.Exists(settings.Config))
         {
-            var json = File.ReadAllText(configPath);
-            config = JsonSerializer.Deserialize<AppConfig>(json);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Failed to read configuration: {ex.Message}");
-            return;
-        }
-
-        if (config == null || string.IsNullOrWhiteSpace(config.ConnectionString))
-        {
-            Console.WriteLine("Invalid configuration. ConnectionString is required.");
-            return;
+            try
+            {
+                var json = File.ReadAllText(settings.Config);
+                config = JsonSerializer.Deserialize<AppConfig>(json);
+            }
+            catch (Exception ex)
+            {
+                AnsiConsole.MarkupLine($"[red]Failed to read configuration: {ex.Message}[/]");
+                return -1;
+            }
         }
 
-        // Use the provided table query if set; otherwise fall back to a basic
-        // query that lists all non-system tables.
-        var query = string.IsNullOrWhiteSpace(config.TableQuery)
-            ? "SELECT schema_id, SCHEMA_NAME(schema_id) as [schema_name], name as table_name, object_id, '['+SCHEMA_NAME(schema_id)+'].['+name+']' AS full_name FROM sys.tables where is_ms_shipped = 0"
-            : config.TableQuery;
+        var connectionString = settings.ConnectionString ?? config?.ConnectionString;
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            AnsiConsole.MarkupLine("[red]Connection string is required.[/]");
+            return -1;
+        }
 
-        var generator = new GenerateSqlServerTables(config.ConnectionString);
+        var query = settings.TableQuery ?? config?.TableQuery ??
+            "SELECT schema_id, SCHEMA_NAME(schema_id) as [schema_name], name as table_name, object_id, '['+SCHEMA_NAME(schema_id)+'].['+name+']' AS full_name FROM sys.tables where is_ms_shipped = 0";
+
+        var generator = new GenerateSqlServerTables(connectionString);
         var tables = generator.Execute(query);
-
-        const string output = "output.txt";
-        GeneratePlantUMLDiagram.GenerateAllRelationships(tables, "ERD", output);
-        Console.WriteLine($"Diagram written to {output}");
+        // add a check for empty tables
+        if (tables == null || tables.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[red]No tables found.[/]");
+            return -1;
+        }
+        GeneratePlantUMLDiagram.GenerateAllRelationships(tables, "ERD", settings.Output);
+        AnsiConsole.MarkupLine($"Output written to [green]{settings.Output}[/]");
+        return 0;
     }
 }

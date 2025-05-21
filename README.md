@@ -50,6 +50,30 @@ Example `SqlServerToPlantUML/appsettings.json`:
 
 Update these values to match your environment before running the program.
 
+## Usage
+
+Run the executable with options to override values from the configuration file:
+
+```bash
+dotnet SqlServerToPlantUML.dll \
+    --config appsettings.json \
+    --connection-string "Server=.;Database=MyDb;Trusted_Connection=True;" \
+    --table-query "SELECT ..." \
+    --output diagram.puml
+```
+
+Or in PowerShell:
+
+```powershell
+PS> .\SqlServerToPlantUML.exe `
+    --config appsettings.json `
+    --connection-string "Server=.;Database=MyDb;Trusted_Connection=True;" `
+    --table-query "SELECT ..." `
+    --output diagram.puml
+```
+
+If an option is omitted, the value from the specified configuration file is used.
+
 ## Output
 
 The tool writes the PlantUML description to a file (for example `diagram.puml`).  This text file contains the tables and their relationships in PlantUML syntax.  You can feed the file to the [PlantUML](https://plantuml.com/) command line utility or any compatible viewer to generate visual diagrams in formats such as PNG or SVG.

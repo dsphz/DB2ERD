@@ -27,3 +27,18 @@ Use the [.NET 8 SDK](https://dotnet.microsoft.com/) and run:
 ```bash
 dotnet build
 ```
+
+## Configuration
+
+The application reads its settings from an `appsettings.json` file placed next to the executable. The file must define a connection string and the SQL query used to list the tables that will be diagrammed.
+
+Example `SqlServerToPlantUML/appsettings.json`:
+
+```json
+{
+  "ConnectionString": "Data Source=MACHINENAME;Initial Catalog=AdventureWorks2014;User ID=sa;Password=MYPASSWORD;Connect Timeout=30;",
+  "TableQuery": "SELECT schema_id, SCHEMA_NAME(schema_id) as [schema_name], name as table_name, object_id, '['+SCHEMA_NAME(schema_id)+'].['+name+']' AS full_name FROM sys.tables where is_ms_shipped = 0"
+}
+```
+
+Update these values to match your environment before running the program.

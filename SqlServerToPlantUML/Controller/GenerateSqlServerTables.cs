@@ -23,14 +23,15 @@ namespace SqlServerToPlantUML.Controller
             m_sqlConn = new  SqlConnection(m_connStr);
         }
 
-        public List<SqlTable> Execute(List<string> tablesToInclude = null, List<string> tablesToExclude = null)
+        public List<SqlTable> Execute(string tableQuery,
+            List<string>? tablesToInclude = null,
+            List<string>? tablesToExclude = null)
         {
             m_tableList = new List<SqlTable>();
 
             try
             {
-                var sql = @"SELECT schema_id, SCHEMA_NAME(schema_id) as [schema_name], name as table_name, object_id, '['+SCHEMA_NAME(schema_id)+'].['+name+']' AS full_name FROM sys.tables where is_ms_shipped = 0";
-                dynamic list = m_sqlConn.Query<dynamic>(sql);
+                dynamic list = m_sqlConn.Query<dynamic>(tableQuery);
 
                 foreach (var row in list)
                 {

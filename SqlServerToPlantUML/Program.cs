@@ -1,109 +1,72 @@
-﻿using SqlServerToPlantUML.Controller;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Spectre.Console;
+using Spectre.Console.Cli;
+using SqlServerToPlantUML.Controller;
+using System.ComponentModel;
+using System.Text.Json;
 
-namespace SqlServerToPlantUML
+namespace SqlServerToPlantUML;
+
+internal class Program
 {
-    class Program
+    public static int Main(string[] args)
     {
-        private static string m_connString;
-        static void Main(string[] args)
-        {
-            m_connString = @"Data Source=MACHINENAME;Initial Catalog=AdventureWorks2014;Persist Security Info=True;User ID=sa;Password=MYPASSWORD;Connect Timeout=30;Application Name=AppName.exe";
+        var app = new CommandApp<GenerateCommand>();
+        return app.Run(args);
+    }
+}
 
-            GenerateAllTables();
-            GeneratePersonSchema();
-            GenerateHumanResourcesSchema();
-            GenerateProductionSchema();
+public class GenerateCommand : Command<GenerateCommand.Settings>
+{
+    public class Settings : CommandSettings
+    {
+        [CommandOption("-c|--config <FILE>")]
+        [Description("Path to configuration JSON file")] 
+        public string Config { get; set; } = "appsettings.json";
+
+        [CommandOption("--connection-string <STRING>")]
+        [Description("Database connection string")] 
+        public string? ConnectionString { get; set; }
+
+        [CommandOption("--table-query <SQL>")]
+        [Description("SQL query used to list tables")]
+        public string? TableQuery { get; set; }
+
+        [CommandOption("-o|--output <FILE>")]
+        [Description("Output PlantUML file")]
+        public string Output { get; set; } = "output.txt";
+    }
+
+    public override int Execute(CommandContext context, Settings settings)
+    {
+        AppConfig? config = null;
+        if (File.Exists(settings.Config))
+        {
+            try
+            {
+                var json = File.ReadAllText(settings.Config);
+                config = JsonSerializer.Deserialize<AppConfig>(json);
+            }
+            catch (Exception ex)
+            {
+                AnsiConsole.MarkupLine($"[red]Failed to read configuration: {ex.Message}[/]");
+                return -1;
+            }
         }
 
-        private static void GenerateAllTables()
+        var connectionString = settings.ConnectionString ?? config?.ConnectionString;
+        if (string.IsNullOrWhiteSpace(connectionString))
         {
-            var plantUml = new GenerateSqlServerTables(m_connString);
-            var tableList = plantUml.Execute();
-
-            var plantUMLText = GeneratePlantUMLDiagram.GenerateAllRelationships(tableList, "SomeTitle", "AdventureWorks2014 - All Tables.txt");
-
+            AnsiConsole.MarkupLine("[red]Connection string is required.[/]");
+            return -1;
         }
 
-        private static void GeneratePersonSchema()
-        {
-            var personSchema = new GenerateSqlServerTables(m_connString);
+        var query = settings.TableQuery ?? config?.TableQuery ??
+            "SELECT schema_id, SCHEMA_NAME(schema_id) as [schema_name], name as table_name, object_id, '['+SCHEMA_NAME(schema_id)+'].['+name+']' AS full_name FROM sys.tables where is_ms_shipped = 0";
 
-            var tablesToInclude = new List<string>();
-            tablesToInclude.Add("Person.Password");
-            tablesToInclude.Add("Person.Person");
-            tablesToInclude.Add("Person.PersonPhone");
-            tablesToInclude.Add("Person.PhoneNumberType");
-            tablesToInclude.Add("Person.EmailAddress");
-            tablesToInclude.Add("Person.ContactType");
-            tablesToInclude.Add("Person.Address");
-            tablesToInclude.Add("Person.AddressType");
-            tablesToInclude.Add("Person.StateProvince");
-            tablesToInclude.Add("Person.BusinessEntity");
-            tablesToInclude.Add("Person.BusinessEntityAddress");
-            tablesToInclude.Add("Person.BusinessEntityContact");
-            tablesToInclude.Add("Person.CountryRegion");
-            
-            var tableList = personSchema.Execute(tablesToInclude: tablesToInclude);
-            var plantUMLText = GeneratePlantUMLDiagram.GenerateAllTables(tableList, "SomeTitle", "AdventureWorks2014 - Person Schema.txt", true);
-
-        }
-
-        private static void GenerateHumanResourcesSchema()
-        {
-            var personSchema = new GenerateSqlServerTables(m_connString);
-
-            var tablesToInclude = new List<string>();
-            tablesToInclude.Add("HumanResources.Shift");
-            tablesToInclude.Add("HumanResources.Department");
-            tablesToInclude.Add("HumanResources.Employee");
-            tablesToInclude.Add("HumanResources.EmployeeDepartmentHistory");
-            tablesToInclude.Add("HumanResources.EmployeePayHistory");
-            tablesToInclude.Add("HumanResources.JobCandidate");
-
-            var tableList = personSchema.Execute(tablesToInclude: tablesToInclude);
-            var plantUMLText = GeneratePlantUMLDiagram.GenerateAllTables(tableList, "SomeTitle", "AdventureWorks2014 - HumanResources Schema.txt", true);
-
-        }
-
-        private static void GenerateProductionSchema()
-        {
-            var personSchema = new GenerateSqlServerTables(m_connString);
-
-            var tablesToInclude = new List<string>();
-            tablesToInclude.Add("Production.WorkOrder");
-            tablesToInclude.Add("Production.UnitMeasure");
-            tablesToInclude.Add("Production.TransactionHistoryArchive");
-            tablesToInclude.Add("Production.ProductSubcategory");
-            tablesToInclude.Add("Production.ProductModelIllustration");
-            tablesToInclude.Add("Production.ProductPhoto");
-            tablesToInclude.Add("Production.ProductProductPhoto");
-            tablesToInclude.Add("Production.TransactionHistory");
-            tablesToInclude.Add("Production.ProductReview");
-            tablesToInclude.Add("Production.ProductListPriceHistory");
-            tablesToInclude.Add("Production.ProductModelProductDescriptionCulture");
-            tablesToInclude.Add("Production.BillOfMaterials");
-            tablesToInclude.Add("Production.ProductCategory");
-            tablesToInclude.Add("Production.ProductCostHistory");
-            tablesToInclude.Add("Production.ProductDescription");
-            tablesToInclude.Add("Production.ProductInventory");
-            tablesToInclude.Add("Production.ScrapReason");
-            tablesToInclude.Add("Production.ProductDocument");
-            tablesToInclude.Add("Production.Culture");
-            tablesToInclude.Add("Production.WorkOrderRouting");
-            tablesToInclude.Add("Production.Document");
-            tablesToInclude.Add("Production.ProductModel");
-            tablesToInclude.Add("Production.Product");
-            tablesToInclude.Add("Production.Illustration");
-            tablesToInclude.Add("Production.Location");
-
-            var tableList = personSchema.Execute(tablesToInclude: tablesToInclude);
-            var plantUMLText = GeneratePlantUMLDiagram.GenerateAllTables(tableList, "SomeTitle", "AdventureWorks2014 - Production Schema.txt", true);
-
-        }
+        var generator = new GenerateSqlServerTables(connectionString);
+        var tables = generator.Execute(query);
+        GeneratePlantUMLDiagram.GenerateAllRelationships(tables, "ERD", settings.Output);
+        AnsiConsole.MarkupLine($"Output written to [green]{settings.Output}[/]");
+        return 0;
     }
 }

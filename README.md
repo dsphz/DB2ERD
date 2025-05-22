@@ -8,9 +8,9 @@ DB2ERD is a lightweight command‑line tool that reads table metadata from a Mic
 
 Example Output:
 
-![alt tag](https://raw.githubusercontent.com/OceanAirdrop/DB2ERD/main/DB2ERD/ExampleDiagrams/AdventureWorks2014%20-%20HumanResources%20Schema.png)
+![Example diagram](https://raw.githubusercontent.com/dsphz/DB2ERD/main/DB2ERD/ExampleDiagrams/AdventureWorks2014%20-%20HumanResources%20Schema.png)
 
-More Examples Here: https://github.com/OceanAirdrop/DB2ERD/tree/main/DB2ERD/ExampleDiagrams
+More Examples Here: [DB2ERD/ExampleDiagrams](DB2ERD/ExampleDiagrams)
 
 PlantUML is an open-source tool allowing users to create diagrams from a plain text language.  You can find more about it here: https://plantuml.com
 

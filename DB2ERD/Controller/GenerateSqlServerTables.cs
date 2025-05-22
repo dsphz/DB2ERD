@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace DB2ERD.Controller
 {
-    public class GenerateSqlServerTables
+    public class GenerateSqlServerTables : ITableGenerator
     {
         private SqlConnection m_sqlConn;
         private string m_connStr;

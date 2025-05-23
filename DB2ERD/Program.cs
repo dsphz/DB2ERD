@@ -11,13 +11,19 @@ internal class Program
 {
     public static int Main(string[] args)
     {
-        var app = new CommandApp<GenerateCommand>();
+        var app = new CommandApp<ErdGeneration>();
         return app.Run(args);
     }
 }
 
-public class GenerateCommand : Command<GenerateCommand.Settings>
+public class ErdGeneration : Command<ErdGeneration.Settings>
 {
+    /// <summary>
+    /// Optional table generator used for testing. When not set, the command
+    /// will create an instance of <see cref="GenerateSqlServerTables"/> at
+    /// runtime.
+    /// </summary>
+    public ITableGenerator TableGenerator { get; set; }
     public class Settings : CommandSettings
     {
         [CommandOption("-c|--config <FILE>")]
@@ -26,11 +32,11 @@ public class GenerateCommand : Command<GenerateCommand.Settings>
 
         [CommandOption("--connection-string <STRING>")]
         [Description("Database connection string")] 
-        public string? ConnectionString { get; set; }
+        public string ConnectionString { get; set; }
 
         [CommandOption("--table-query <SQL>")]
         [Description("SQL query used to list tables")]
-        public string? TableQuery { get; set; }
+        public string TableQuery { get; set; }
 
         [CommandOption("-o|--output <FILE>")]
         [Description("Output PlantUML file")]
@@ -39,7 +45,7 @@ public class GenerateCommand : Command<GenerateCommand.Settings>
 
     public override int Execute(CommandContext context, Settings settings)
     {
-        AppConfig? config = null;
+        AppConfig config = null;
         if (File.Exists(settings.Config))
         {
             try
@@ -64,7 +70,7 @@ public class GenerateCommand : Command<GenerateCommand.Settings>
         var query = settings.TableQuery ?? config?.TableQuery ??
             "SELECT schema_id, SCHEMA_NAME(schema_id) as [schema_name], name as table_name, object_id, '['+SCHEMA_NAME(schema_id)+'].['+name+']' AS full_name FROM sys.tables where is_ms_shipped = 0";
 
-        var generator = new GenerateSqlServerTables(connectionString);
+        var generator = TableGenerator ?? new GenerateSqlServerTables(connectionString);
         var tables = generator.Execute(query);
         // add a check for empty tables
         if (tables == null || tables.Count == 0)

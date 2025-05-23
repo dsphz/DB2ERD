@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace DB2ERD.Controller
 {
-    public class GenerateSqlServerTables
+    public class GenerateSqlServerTables : ITableGenerator
     {
         private SqlConnection m_sqlConn;
         private string m_connStr;
@@ -24,8 +24,8 @@ namespace DB2ERD.Controller
         }
 
         public List<SqlTable> Execute(string tableQuery,
-            List<string>? tablesToInclude = null,
-            List<string>? tablesToExclude = null)
+            List<string> tablesToInclude = null,
+            List<string> tablesToExclude = null)
         {
             m_tableList = new List<SqlTable>();
 

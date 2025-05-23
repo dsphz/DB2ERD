@@ -13,7 +13,6 @@ namespace DB2ERD.Controller
 {
     public class GenerateSqlServerTables : ITableGenerator
     {
-        private SqlConnection m_sqlConn;
         private string m_connStr;
         private List<SqlTable> m_tableList = new List<SqlTable>();
         private string m_database;
@@ -21,7 +20,6 @@ namespace DB2ERD.Controller
         public GenerateSqlServerTables(string dbConnString)
         {
             m_connStr = dbConnString;
-            m_sqlConn = new  SqlConnection(m_connStr);
         }
 
         public List<SqlTable> Execute(string tableQuery,
@@ -32,12 +30,14 @@ namespace DB2ERD.Controller
 
             try
             {
-                dynamic list = m_sqlConn.Query<dynamic>(tableQuery);
-
-                foreach (var row in list)
+                using (var conn = new SqlConnection(m_connStr))
                 {
-                    try
+                    dynamic list = conn.Query<dynamic>(tableQuery);
+
+                    foreach (var row in list)
                     {
+                        try
+                        {
                         var fullName = $"{row.schema_name}.{row.table_name}";
                         if (tablesToExclude != null && tablesToExclude.Contains(fullName))
                             continue;
@@ -67,6 +67,7 @@ namespace DB2ERD.Controller
                     }
                 }
             }
+            }
             catch (Exception ex)
             {
                 AnsiConsole.MarkupLine($"[red]Failed to execute table query: {ex.Message}[/]");
@@ -88,7 +89,10 @@ namespace DB2ERD.Controller
                 FROM sys.foreign_keys
                 WHERE parent_object_id = OBJECT_ID('{table.full_name}')";
 
-            table.foreign_key_list = m_sqlConn.Query<ForeignKeyConstraint>(sql).ToList();
+            using (var conn = new SqlConnection(m_connStr))
+            {
+                table.foreign_key_list = conn.Query<ForeignKeyConstraint>(sql).ToList();
+            }
             //table.foreign_key_list = list;
             //foreach (var row in list)
             //{
@@ -119,14 +123,17 @@ namespace DB2ERD.Controller
                      KU.TABLE_NAME
                     ,KU.ORDINAL_POSITION";
 
-            dynamic foreighnKeyList = m_sqlConn.Query<dynamic>(sql);
-
-            foreach (var row in foreighnKeyList)
+            using (var conn = new SqlConnection(m_connStr))
             {
-                var col = table.columnList.Where(x => x.column_name == row.foreign_key_column).FirstOrDefault();
-                if (col != null)
+                dynamic foreighnKeyList = conn.Query<dynamic>(sql);
+
+                foreach (var row in foreighnKeyList)
                 {
-                    col.is_foreign_key = true;
+                    var col = table.columnList.Where(x => x.column_name == row.foreign_key_column).FirstOrDefault();
+                    if (col != null)
+                    {
+                        col.is_foreign_key = true;
+                    }
                 }
             }
         }
@@ -145,14 +152,17 @@ namespace DB2ERD.Controller
                      KU.TABLE_NAME
                     ,KU.ORDINAL_POSITION";
 
-            dynamic primaryKeyList = m_sqlConn.Query<dynamic>(sql);
-
-            foreach (var row in primaryKeyList)
+            using (var conn = new SqlConnection(m_connStr))
             {
-                var col = table.columnList.Where(x => x.column_name == row.primary_key_column).FirstOrDefault();
-                if (col != null)
+                dynamic primaryKeyList = conn.Query<dynamic>(sql);
+
+                foreach (var row in primaryKeyList)
                 {
-                    col.is_primary_key = true;
+                    var col = table.columnList.Where(x => x.column_name == row.primary_key_column).FirstOrDefault();
+                    if (col != null)
+                    {
+                        col.is_primary_key = true;
+                    }
                 }
             }
         }
@@ -161,16 +171,19 @@ namespace DB2ERD.Controller
         {
             var sql = $"select COLUMN_NAME, IS_NULLABLE,DATA_TYPE from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA = '{table.schema_name}' and TABLE_NAME = '{table.table_name}' order by ORDINAL_POSITION";
 
-            dynamic columnList = m_sqlConn.Query<dynamic>(sql);
-
-            foreach (var row in columnList)
+            using (var conn = new SqlConnection(m_connStr))
             {
-                var c = new SqlColumn();
-                c.column_name = row.COLUMN_NAME;
-                c.is_nullable = row.IS_NULLABLE;
-                c.data_type = row.DATA_TYPE;
+                dynamic columnList = conn.Query<dynamic>(sql);
 
-                table.columnList.Add(c);
+                foreach (var row in columnList)
+                {
+                    var c = new SqlColumn();
+                    c.column_name = row.COLUMN_NAME;
+                    c.is_nullable = row.IS_NULLABLE;
+                    c.data_type = row.DATA_TYPE;
+
+                    table.columnList.Add(c);
+                }
             }
         }
     }

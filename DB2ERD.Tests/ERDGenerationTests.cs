@@ -90,4 +90,29 @@ public class ERDGenerationTests
                 File.Delete(file);
         }
     }
+
+    [Fact]
+    public void Should_ReturnErrorCode_When_ConnectionStringIsEmpty()
+    {
+        var cmd = new ErdGeneration();
+        var file = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        try
+        {
+            var settings = new ErdGeneration.Settings
+            {
+                ConnectionString = "",
+                TableQuery = "SELECT",
+                Output = file,
+                Config = "nonexistent.json"
+            };
+            var code = cmd.Execute(null!, settings);
+            Assert.Equal(-1, code);
+            Assert.False(File.Exists(file));
+        }
+        finally
+        {
+            if (File.Exists(file))
+                File.Delete(file);
+        }
+    }
 }

@@ -18,8 +18,8 @@ public class GeneratePlantUMLDiagramTests
             full_name = "dbo.Table1",
             columnList = new List<SqlColumn>
             {
-                new SqlColumn { column_name = "Id", data_type = "int", is_primary_key = true },
-                new SqlColumn { column_name = "Name", data_type = "nvarchar" }
+                new() { column_name = "Id", data_type = "int", is_primary_key = true },
+                new() { column_name = "Name", data_type = "nvarchar" }
             }
         };
         var table2 = new SqlTable
@@ -29,7 +29,7 @@ public class GeneratePlantUMLDiagramTests
             full_name = "dbo.Table2",
             columnList = new List<SqlColumn>
             {
-                new SqlColumn { column_name = "Id", data_type = "int", is_primary_key = true }
+                new() { column_name = "Id", data_type = "int", is_primary_key = true }
             }
         };
         table1.foreign_key_list.Add(new ForeignKeyConstraint

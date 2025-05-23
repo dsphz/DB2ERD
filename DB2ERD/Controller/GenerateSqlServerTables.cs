@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Spectre.Console;
 
 namespace DB2ERD.Controller
 {
@@ -62,11 +63,13 @@ namespace DB2ERD.Controller
                     }
                     catch (Exception ex)
                     {
+                        AnsiConsole.MarkupLine($"[red]Failed to process table {row.schema_name}.{row.table_name}: {ex.Message}[/]");
                     }
                 }
             }
             catch (Exception ex)
             {
+                AnsiConsole.MarkupLine($"[red]Failed to execute table query: {ex.Message}[/]");
             }
 
             return m_tableList;

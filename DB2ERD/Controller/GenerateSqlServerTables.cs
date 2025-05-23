@@ -24,8 +24,8 @@ namespace DB2ERD.Controller
         }
 
         public List<SqlTable> Execute(string tableQuery,
-            List<string>? tablesToInclude = null,
-            List<string>? tablesToExclude = null)
+            List<string> tablesToInclude = null,
+            List<string> tablesToExclude = null)
         {
             m_tableList = new List<SqlTable>();
 

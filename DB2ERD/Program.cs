@@ -11,19 +11,19 @@ internal class Program
 {
     public static int Main(string[] args)
     {
-        var app = new CommandApp<GenerateCommand>();
+        var app = new CommandApp<ErdGeneration>();
         return app.Run(args);
     }
 }
 
-public class GenerateCommand : Command<GenerateCommand.Settings>
+public class ErdGeneration : Command<ErdGeneration.Settings>
 {
     /// <summary>
     /// Optional table generator used for testing. When not set, the command
     /// will create an instance of <see cref="GenerateSqlServerTables"/> at
     /// runtime.
     /// </summary>
-    internal ITableGenerator? TableGenerator { get; set; }
+    public ITableGenerator TableGenerator { get; set; }
     public class Settings : CommandSettings
     {
         [CommandOption("-c|--config <FILE>")]
@@ -32,11 +32,11 @@ public class GenerateCommand : Command<GenerateCommand.Settings>
 
         [CommandOption("--connection-string <STRING>")]
         [Description("Database connection string")] 
-        public string? ConnectionString { get; set; }
+        public string ConnectionString { get; set; }
 
         [CommandOption("--table-query <SQL>")]
         [Description("SQL query used to list tables")]
-        public string? TableQuery { get; set; }
+        public string TableQuery { get; set; }
 
         [CommandOption("-o|--output <FILE>")]
         [Description("Output PlantUML file")]
@@ -45,7 +45,7 @@ public class GenerateCommand : Command<GenerateCommand.Settings>
 
     public override int Execute(CommandContext context, Settings settings)
     {
-        AppConfig? config = null;
+        AppConfig config = null;
         if (File.Exists(settings.Config))
         {
             try

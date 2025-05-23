@@ -58,4 +58,158 @@ public class GeneratePlantUMLDiagramTests
                 File.Delete(file);
         }
     }
+
+    [Fact]
+    public void Should_WriteExpectedUml_When_GeneratingAllTables()
+    {
+        var parent = new SqlTable
+        {
+            schema_name = "dbo",
+            table_name = "Parent",
+            full_name = "dbo.Parent",
+            columnList = new List<SqlColumn>
+            {
+                new() { column_name = "Id", data_type = "int", is_primary_key = true }
+            }
+        };
+
+        var child = new SqlTable
+        {
+            schema_name = "dbo",
+            table_name = "Child",
+            full_name = "dbo.Child",
+            columnList = new List<SqlColumn>
+            {
+                new() { column_name = "Id", data_type = "int", is_primary_key = true },
+                new() { column_name = "ParentId", data_type = "int", is_foreign_key = true }
+            }
+        };
+
+        child.foreign_key_list.Add(new ForeignKeyConstraint
+        {
+            fk_schema_name = "dbo",
+            fk_table_name = "Child",
+            pk_schema_name = "dbo",
+            pk_table_name = "Parent",
+            foreign_key_name = "FK_Child_Parent"
+        });
+
+        var grandChild = new SqlTable
+        {
+            schema_name = "dbo",
+            table_name = "GrandChild",
+            full_name = "dbo.GrandChild",
+            columnList = new List<SqlColumn>
+            {
+                new() { column_name = "Id", data_type = "int", is_primary_key = true },
+                new() { column_name = "ChildId", data_type = "int", is_foreign_key = true }
+            }
+        };
+
+        grandChild.foreign_key_list.Add(new ForeignKeyConstraint
+        {
+            fk_schema_name = "dbo",
+            fk_table_name = "GrandChild",
+            pk_schema_name = "dbo",
+            pk_table_name = "Child",
+            foreign_key_name = "FK_GrandChild_Child"
+        });
+
+        var standalone = new SqlTable
+        {
+            schema_name = "dbo",
+            table_name = "Standalone",
+            full_name = "dbo.Standalone",
+            columnList = new List<SqlColumn>
+            {
+                new() { column_name = "Id", data_type = "int", is_primary_key = true }
+            }
+        };
+
+        var tables = new List<SqlTable> { parent, child, grandChild, standalone };
+        var file = Path.GetTempFileName();
+        try
+        {
+            var uml = GeneratePlantUMLDiagram.GenerateAllTables(tables, "ERD", file);
+            var fileContent = File.ReadAllText(file);
+            Assert.Equal(uml, fileContent);
+            Assert.Contains("table( dbo.Parent )", uml);
+            Assert.Contains("table( dbo.Child )", uml);
+            Assert.Contains("table( dbo.GrandChild )", uml);
+            Assert.Contains("table( dbo.Standalone )", uml);
+            Assert.Contains("dbo.Child }|--|| dbo.Parent", uml);
+            Assert.Contains("dbo.GrandChild }|--|| dbo.Child", uml);
+            Assert.DoesNotContain("dbo.Standalone }|--||", uml);
+        }
+        finally
+        {
+            if (File.Exists(file))
+                File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public void Should_GenerateOnlyIsolatedTables_When_GeneratingTablesWithNoRelationships()
+    {
+        var table1 = new SqlTable
+        {
+            schema_name = "dbo",
+            table_name = "Table1",
+            full_name = "dbo.Table1",
+            columnList = new List<SqlColumn>
+            {
+                new() { column_name = "Id", data_type = "int", is_primary_key = true }
+            }
+        };
+
+        var table2 = new SqlTable
+        {
+            schema_name = "dbo",
+            table_name = "Table2",
+            full_name = "dbo.Table2",
+            columnList = new List<SqlColumn>
+            {
+                new() { column_name = "Id", data_type = "int", is_primary_key = true },
+                new() { column_name = "Table1Id", data_type = "int", is_foreign_key = true }
+            }
+        };
+
+        table2.foreign_key_list.Add(new ForeignKeyConstraint
+        {
+            fk_schema_name = "dbo",
+            fk_table_name = "Table2",
+            pk_schema_name = "dbo",
+            pk_table_name = "Table1",
+            foreign_key_name = "FK_Table2_Table1"
+        });
+
+        var isolated = new SqlTable
+        {
+            schema_name = "dbo",
+            table_name = "Isolated",
+            full_name = "dbo.Isolated",
+            columnList = new List<SqlColumn>
+            {
+                new() { column_name = "Id", data_type = "int", is_primary_key = true }
+            }
+        };
+
+        var tables = new List<SqlTable> { table1, table2, isolated };
+        var file = Path.GetTempFileName();
+        try
+        {
+            var uml = GeneratePlantUMLDiagram.GenerateTablesWithNoRelationships(tables, "ERD", file);
+            var fileContent = File.ReadAllText(file);
+            Assert.Equal(uml, fileContent);
+            Assert.Contains("table( dbo.Isolated )", uml);
+            Assert.DoesNotContain("table( dbo.Table1 )", uml);
+            Assert.DoesNotContain("table( dbo.Table2 )", uml);
+            Assert.DoesNotContain("dbo.Table2 }|--|| dbo.Table1", uml);
+        }
+        finally
+        {
+            if (File.Exists(file))
+                File.Delete(file);
+        }
+    }
 }

@@ -20,7 +20,7 @@ public class ERDGenerationTests
     }
 
     [Fact]
-    public void Execute_ReturnsErrorWhenConfigFileIsMissing()
+    public void Should_ReturnErrorCode_When_ConfigFileIsMissing()
     {
         var cmd = new ErdGeneration();
         var result = cmd.Execute(null!, new ErdGeneration.Settings{ Config="nonexistent.json" });
@@ -28,7 +28,7 @@ public class ERDGenerationTests
     }
 
     [Fact]
-    public void Execute_WritesExpectedPlantUMLToFile()
+    public void Should_WritePlantUMLToFile_When_ExecuteIsCalled()
     {
         var fake = new FakeGenerator();
         var parentTable = new SqlTable

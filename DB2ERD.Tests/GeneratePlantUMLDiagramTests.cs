@@ -9,7 +9,7 @@ namespace DB2ERD.Tests.Controller;
 public class GeneratePlantUMLDiagramTests
 {
     [Fact]
-    public void GenerateAllRelationships_WritesExpectedUml()
+    public void Should_WriteExpectedUml_When_GeneratingAllRelationships()
     {
         var table1 = new SqlTable
         {

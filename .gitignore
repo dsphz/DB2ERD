@@ -91,3 +91,5 @@ UpgradeLog*.htm
 ServiceFabricBackup/
 *.rptproj.bak
 .idea/
+# Ignore PlantUML jar
+DB2ERD/bin/Debug/PlantUML/plantuml.jar

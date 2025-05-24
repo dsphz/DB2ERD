@@ -23,6 +23,7 @@ Inspiration For this project was from this blogpost: https://raphael-leger.mediu
 - [.NET 8 SDK](https://dotnet.microsoft.com/)
 - Access to a Microsoft SQL Server instance (2012 or later) with permissions to query `INFORMATION_SCHEMA` and `sys` tables
 - Ability to create files in the working directory for the generated diagram
+- PlantUML to render diagrams. It can be installed via a package manager (e.g. `apt install plantuml` or `brew install plantuml`) or by downloading the `plantuml.jar` from [https://plantuml.com/download](https://plantuml.com/download).
 
 ## Building
 

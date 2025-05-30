@@ -39,7 +39,7 @@ namespace DB2ERD.Controller
                         if (tablesToInclude != null && !tablesToInclude.Contains(fullName))
                             continue;
 
-                        Console.WriteLine($"[{row.schema_name}].[{row.table_name}]");
+                        AnsiConsole.MarkupLine($"[{row.schema_name}].[{row.table_name}]");
 
                         var table = new SqlTable();
                         table.schema_id = row.schema_id;

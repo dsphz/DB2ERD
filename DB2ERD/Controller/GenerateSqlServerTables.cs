@@ -10,7 +10,6 @@ namespace DB2ERD.Controller
     {
         private string m_connStr;
         private List<SqlTable> m_tableList = new List<SqlTable>();
-        private string m_database;
 
         public GenerateSqlServerTables(string dbConnString)
         {

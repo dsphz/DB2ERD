@@ -1,12 +1,7 @@
-﻿using Dapper;
+using Dapper;
 using DB2ERD.Model;
-using System;
-using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Spectre.Console;
 
 namespace DB2ERD.Controller

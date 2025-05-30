@@ -1,10 +1,8 @@
-﻿using DB2ERD.Model;
-using System.Threading.Tasks;
+using DB2ERD.Model;
 using System.Text;
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
-using System;
 
 
 namespace DB2ERD.Controller

@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-dotnet@v3
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
       - run: dotnet restore
@@ -58,13 +58,15 @@ jobs:
               exit 1
             fi
           fi
-      - uses: actions/setup-dotnet@v3
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
       - name: Publish Windows build
         run: dotnet publish DB2ERD/DB2ERD.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish/win-x64
       - name: Publish Linux build
         run: dotnet publish DB2ERD/DB2ERD.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o publish/linux-x64
+      - name: List generated artifacts
+        run: ls -R publish
       - name: Create tag when run manually
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.tag != ''
         run: |
@@ -73,11 +75,11 @@ jobs:
           git tag ${{ github.event.inputs.tag }}
           git push origin ${{ github.event.inputs.tag }}
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows
           path: publish/win-x64
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: linux
           path: publish/linux-x64

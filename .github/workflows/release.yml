@@ -28,6 +28,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Update VERSION
+        run: |
+          VERSION="${{ github.event.inputs.tag || github.ref_name }}"
+          VERSION="${VERSION#refs/tags/}"
+          VERSION="${VERSION#v}"
+
+          echo "Updating VERSION to $VERSION"
+          echo "$VERSION" > VERSION
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet VERSION; then
+            echo "VERSION file unchanged, skipping commit"
+          else
+            git add VERSION
+            echo "Committing VERSION update to $VERSION"
+            if git commit -m "chore: bump version to $VERSION"; then
+              echo "Successfully committed version update"
+              if git push origin HEAD:main; then
+                echo "Successfully pushed version update"
+              else
+                echo "Failed to push version update" >&2
+                exit 1
+              fi
+            else
+              echo "Failed to commit version update" >&2
+              exit 1
+            fi
+          fi
       - uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x
@@ -38,8 +68,8 @@ jobs:
       - name: Create tag when run manually
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.tag != ''
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag ${{ github.event.inputs.tag }}
           git push origin ${{ github.event.inputs.tag }}
       - name: Upload artifacts

@@ -25,7 +25,7 @@ jobs:
       - run: dotnet test --no-build --configuration Release
 
   publish:
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -64,13 +64,17 @@ jobs:
             fi
           fi
       - uses: actions/setup-dotnet@v4
+        if: github.event_name != 'pull_request'
         with:
           dotnet-version: 8.0.x
       - name: Publish Windows build
+        if: github.event_name != 'pull_request'
         run: dotnet publish DB2ERD/DB2ERD.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish/win-x64
       - name: Publish Linux build
+        if: github.event_name != 'pull_request'
         run: dotnet publish DB2ERD/DB2ERD.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o publish/linux-x64
       - name: List generated artifacts
+        if: github.event_name != 'pull_request'
         run: ls -R publish
       - name: Create tag when run manually
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.tag != ''
@@ -80,15 +84,18 @@ jobs:
           git tag ${{ github.event.inputs.tag }}
           git push origin ${{ github.event.inputs.tag }}
       - name: Upload artifacts
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: windows
           path: publish/win-x64
       - uses: actions/upload-artifact@v4
+        if: github.event_name != 'pull_request'
         with:
           name: linux
           path: publish/linux-x64
       - name: Create GitHub Release
+        if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}

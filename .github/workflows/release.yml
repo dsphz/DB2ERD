@@ -25,18 +25,14 @@ jobs:
       - run: dotnet test --no-build --configuration Release
 
   publish:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Skipping publish on pull requests
-        if: github.event_name == 'pull_request'
-        run: echo "Publish steps are skipped on pull requests"
       - uses: actions/checkout@v3
-        if: github.event_name != 'pull_request'
         with:
           fetch-depth: 0
       - name: Update VERSION
-        if: github.event_name != 'pull_request'
         run: |
           VERSION="${{ github.event.inputs.tag || github.ref_name }}"
           VERSION="${VERSION#refs/tags/}"

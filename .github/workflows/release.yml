@@ -1,20 +1,20 @@
-name: Build and Release
+name: Release
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
+    tags: [ 'v*' ]
   workflow_dispatch:
     inputs:
-      tag:
-        description: 'Release tag (for example v1.0.0)'
-        required: false
+      version:
+        description: 'Version to release (e.g., 1.0.0 - without v prefix)'
+        required: true
+        type: string
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: actions/setup-dotnet@v4
@@ -22,84 +22,88 @@ jobs:
           dotnet-version: 8.0.x
       - run: dotnet restore
       - run: dotnet build --configuration Release --no-restore
-      - run: dotnet test --no-build --configuration Release
+      - run: dotnet test --no-build --configuration Release --verbosity normal
 
-  publish:
-    if: github.event_name != 'pull_request'
+  release:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Update VERSION
+          
+      - name: Determine version
+        id: version
         run: |
-          VERSION="${{ github.event.inputs.tag || github.ref_name }}"
-          VERSION="${VERSION#refs/tags/}"
-          VERSION="${VERSION#v}"
-
-          echo "Updating VERSION to $VERSION"
-          echo "$VERSION" > VERSION
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          if git diff --quiet VERSION; then
-            echo "VERSION file unchanged, skipping commit"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            echo "Creating release for manually specified version: $VERSION"
           else
-            git add VERSION
-            echo "Committing VERSION update to $VERSION"
-            if git commit -m "chore: bump version to $VERSION"; then
-              echo "Successfully committed version update"
-              git pull --rebase origin main
-              if git push origin HEAD:main; then
-                echo "Successfully pushed version update"
-              else
-                echo "Failed to push version update" >&2
-                exit 1
-              fi
-            else
-              echo "Failed to commit version update" >&2
-              exit 1
-            fi
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            echo "Creating release for tagged version: $VERSION"
           fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+          
       - uses: actions/setup-dotnet@v4
-        if: github.event_name != 'pull_request'
         with:
           dotnet-version: 8.0.x
-      - name: Publish Windows build
-        if: github.event_name != 'pull_request'
-        run: dotnet publish DB2ERD/DB2ERD.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish/win-x64
-      - name: Publish Linux build
-        if: github.event_name != 'pull_request'
-        run: dotnet publish DB2ERD/DB2ERD.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o publish/linux-x64
-      - name: List generated artifacts
-        if: github.event_name != 'pull_request'
-        run: ls -R publish
-      - name: Create tag when run manually
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.tag != ''
+          
+      - name: Publish builds
+        run: |
+          # Windows x64
+          dotnet publish DB2ERD/DB2ERD.csproj \
+            -c Release \
+            -r win-x64 \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:Version=${{ steps.version.outputs.version }} \
+            -o artifacts/win-x64
+            
+          # Linux x64
+          dotnet publish DB2ERD/DB2ERD.csproj \
+            -c Release \
+            -r linux-x64 \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:Version=${{ steps.version.outputs.version }} \
+            -o artifacts/linux-x64
+            
+          # macOS x64
+          dotnet publish DB2ERD/DB2ERD.csproj \
+            -c Release \
+            -r osx-x64 \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:Version=${{ steps.version.outputs.version }} \
+            -o artifacts/osx-x64
+            
+      - name: Create release archives
+        run: |
+          cd artifacts
+          zip -r DB2ERD-${{ steps.version.outputs.version }}-win-x64.zip win-x64/
+          tar -czf DB2ERD-${{ steps.version.outputs.version }}-linux-x64.tar.gz linux-x64/
+          tar -czf DB2ERD-${{ steps.version.outputs.version }}-osx-x64.tar.gz osx-x64/
+          
+      - name: Create tag (if manual dispatch)
+        if: github.event_name == 'workflow_dispatch'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag ${{ github.event.inputs.tag }}
-          git push origin ${{ github.event.inputs.tag }}
-      - name: Upload artifacts
-        if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows
-          path: publish/win-x64
-      - uses: actions/upload-artifact@v4
-        if: github.event_name != 'pull_request'
-        with:
-          name: linux
-          path: publish/linux-x64
+          git tag "${{ steps.version.outputs.tag }}"
+          git push origin "${{ steps.version.outputs.tag }}"
+          
       - name: Create GitHub Release
-        if: github.event_name != 'pull_request'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Release ${{ steps.version.outputs.tag }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
           files: |
-            publish/win-x64/**
-            publish/linux-x64/**
-
+            artifacts/DB2ERD-${{ steps.version.outputs.version }}-win-x64.zip
+            artifacts/DB2ERD-${{ steps.version.outputs.version }}-linux-x64.tar.gz
+            artifacts/DB2ERD-${{ steps.version.outputs.version }}-osx-x64.tar.gz

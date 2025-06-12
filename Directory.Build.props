@@ -1,5 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <Version>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)VERSION'))</Version>
-  </PropertyGroup>
-</Project>

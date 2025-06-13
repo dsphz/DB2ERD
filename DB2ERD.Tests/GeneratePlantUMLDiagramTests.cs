@@ -212,4 +212,70 @@ public class GeneratePlantUMLDiagramTests
                 File.Delete(file);
         }
     }
+
+    [Fact]
+    public void Should_HandleRelationshipsToMissingTables_BasedOnFlag()
+    {
+        var referencing = new SqlTable
+        {
+            schema_name = "dbo",
+            table_name = "Referencing",
+            full_name = "dbo.Referencing",
+            columnList = new List<SqlColumn>
+            {
+                new() { column_name = "Id", data_type = "int", is_primary_key = true },
+                new() { column_name = "MissingId", data_type = "int", is_foreign_key = true }
+            }
+        };
+
+        referencing.foreign_key_list.Add(new ForeignKeyConstraint
+        {
+            fk_schema_name = "dbo",
+            fk_table_name = "Referencing",
+            pk_schema_name = "dbo",
+            pk_table_name = "Missing",
+            foreign_key_name = "FK_Referencing_Missing"
+        });
+
+        var other = new SqlTable
+        {
+            schema_name = "dbo",
+            table_name = "Other",
+            full_name = "dbo.Other",
+            columnList = new List<SqlColumn>
+            {
+                new() { column_name = "Id", data_type = "int", is_primary_key = true }
+            }
+        };
+
+        var tables = new List<SqlTable> { referencing, other };
+
+        var file1 = Path.GetTempFileName();
+        try
+        {
+            var uml = GeneratePlantUMLDiagram.GenerateAllTables(tables, "ERD", file1, excludeRelationshipsToTablesThatDontExist: true);
+            var fileContent = File.ReadAllText(file1);
+            Assert.Equal(uml, fileContent);
+            Assert.DoesNotContain("dbo.Referencing }|--|| dbo.Missing", uml);
+        }
+        finally
+        {
+            if (File.Exists(file1))
+                File.Delete(file1);
+        }
+
+        var file2 = Path.GetTempFileName();
+        try
+        {
+            var uml2 = GeneratePlantUMLDiagram.GenerateAllTables(tables, "ERD", file2, excludeRelationshipsToTablesThatDontExist: false);
+            var fileContent2 = File.ReadAllText(file2);
+            Assert.Equal(uml2, fileContent2);
+            Assert.Contains("dbo.Referencing }|--|| dbo.Missing", uml2);
+        }
+        finally
+        {
+            if (File.Exists(file2))
+                File.Delete(file2);
+        }
+    }
 }

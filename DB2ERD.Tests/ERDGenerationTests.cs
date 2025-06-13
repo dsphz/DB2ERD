@@ -115,4 +115,30 @@ public class ERDGenerationTests
                 File.Delete(file);
         }
     }
+
+    [Fact]
+    public void Should_ReturnErrorCode_When_DatabaseTypeIsInvalid()
+    {
+        var fake = new FakeGenerator();
+        var file = Path.GetTempFileName();
+        try
+        {
+            var cmd = new ErdGeneration { TableGenerator = fake };
+            var settings = new ErdGeneration.Settings
+            {
+                ConnectionString = "fake",
+                DatabaseType = "BadType",
+                TableQuery = "SELECT",
+                Output = file,
+                Config = "nonexistent.json"
+            };
+            var code = cmd.Execute(null!, settings);
+            Assert.Equal(-1, code);
+        }
+        finally
+        {
+            if (File.Exists(file))
+                File.Delete(file);
+        }
+    }
 }

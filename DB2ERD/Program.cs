@@ -87,7 +87,14 @@ public class ErdGeneration : Command<ErdGeneration.Settings>
             _ => string.Empty
         };
 
-        var query = settings.TableQuery ?? config?.TableQuery ?? defaultQuery;
+        // Prefer a query passed on the command line. If none is specified,
+        // look for one in the configuration file. When both are missing or
+        // blank, fall back to the built-in default for the selected database.
+        var query = !string.IsNullOrWhiteSpace(settings.TableQuery)
+            ? settings.TableQuery
+            : !string.IsNullOrWhiteSpace(config?.TableQuery)
+                ? config.TableQuery
+                : defaultQuery;
 
         var generator = TableGenerator ?? dbType switch
         {

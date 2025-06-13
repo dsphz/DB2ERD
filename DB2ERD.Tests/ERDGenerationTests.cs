@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 using DB2ERD.Controller;
 using DB2ERD.Model;
 using Xunit;
@@ -139,6 +140,63 @@ public class ERDGenerationTests
         {
             if (File.Exists(file))
                 File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public void Should_ReadQueryFromConfig_AndFallbackToDefault()
+    {
+        // Arrange a fake generator with one table so Execute succeeds
+        var fake = new FakeGenerator();
+        fake.Tables.Add(new SqlTable
+        {
+            schema_name = "dbo",
+            table_name = "Only",
+            full_name = "dbo.Only",
+            columnList = [ new SqlColumn { column_name = "Id", data_type = "int" } ]
+        });
+
+        var configPath = Path.GetTempFileName();
+        const string queryFromConfig = "SELECT * FROM MyTables";
+        var configWithQuery = new AppConfig { ConnectionString = "fake", TableQuery = queryFromConfig };
+        var outputFile = Path.Combine(Directory.GetCurrentDirectory(), "output.txt");
+
+        try
+        {
+            // Write config that includes the custom query
+            File.WriteAllText(configPath, JsonSerializer.Serialize(configWithQuery));
+
+            var cmd = new ErdGeneration { TableGenerator = fake };
+            var settings = new ErdGeneration.Settings { Config = configPath };
+
+            // Act
+            var code = cmd.Execute(null!, settings);
+
+            // Assert query from config is used
+            Assert.Equal(0, code);
+            Assert.Equal(queryFromConfig, fake.LastQuery);
+
+            if (File.Exists(outputFile))
+                File.Delete(outputFile);
+
+            // Now remove the TableQuery from the config to test default query usage
+            File.WriteAllText(configPath, JsonSerializer.Serialize(new { ConnectionString = "fake" }));
+
+            var fake2 = new FakeGenerator();
+            fake2.Tables.Add(fake.Tables[0]);
+
+            cmd = new ErdGeneration { TableGenerator = fake2 };
+            code = cmd.Execute(null!, settings);
+
+            Assert.Equal(0, code);
+            Assert.Contains("sys.tables", fake2.LastQuery);
+        }
+        finally
+        {
+            if (File.Exists(configPath))
+                File.Delete(configPath);
+            if (File.Exists(outputFile))
+                File.Delete(outputFile);
         }
     }
 }

@@ -16,6 +16,7 @@ namespace DB2ERD.Controller
             m_connStr = dbConnString;
         }
 
+        /// <inheritdoc />
         public List<SqlTable> Execute(string tableQuery,
             List<string> tablesToInclude = null,
             List<string> tablesToExclude = null)

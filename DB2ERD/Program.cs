@@ -38,6 +38,10 @@ public class ErdGeneration : Command<ErdGeneration.Settings>
         [Description("SQL query used to list tables")]
         public string TableQuery { get; set; }
 
+        [CommandOption("--dbtype <TYPE>")]
+        [Description("Database type: SqlServer, Oracle, PostgreSql, MySql")]
+        public string DatabaseType { get; set; }
+
         [CommandOption("-o|--output <FILE>")]
         [Description("Output PlantUML file")]
         public string Output { get; set; } = "output.txt";
@@ -67,10 +71,31 @@ public class ErdGeneration : Command<ErdGeneration.Settings>
             return -1;
         }
 
-        var query = settings.TableQuery ?? config?.TableQuery ??
-            "SELECT schema_id, SCHEMA_NAME(schema_id) as [schema_name], name as table_name, object_id, '['+SCHEMA_NAME(schema_id)+'].['+name+']' AS full_name FROM sys.tables where is_ms_shipped = 0";
+        var dbTypeString = settings.DatabaseType ?? config?.DatabaseType ?? "SqlServer";
+        if (!Enum.TryParse<DatabaseType>(dbTypeString, true, out var dbType))
+        {
+            AnsiConsole.MarkupLine($"[red]Unknown database type: {dbTypeString}[/]");
+            return -1;
+        }
 
-        var generator = TableGenerator ?? new GenerateSqlServerTables(connectionString);
+        var defaultQuery = dbType switch
+        {
+            DatabaseType.SqlServer => "SELECT schema_id, SCHEMA_NAME(schema_id) as [schema_name], name as table_name, object_id, '['+SCHEMA_NAME(schema_id)+'].['+name+']' AS full_name FROM sys.tables where is_ms_shipped = 0",
+            DatabaseType.Oracle => "SELECT owner AS schema_name, table_name, owner||'.'||table_name AS full_name FROM all_tables WHERE owner NOT IN ('SYS','SYSTEM')",
+            DatabaseType.PostgreSql => "SELECT table_schema AS schema_name, table_name, table_schema||'.'||table_name AS full_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema NOT IN ('pg_catalog','information_schema')",
+            DatabaseType.MySql => "SELECT table_schema AS schema_name, table_name, CONCAT(table_schema,'.',table_name) AS full_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema = DATABASE()",
+            _ => string.Empty
+        };
+
+        var query = settings.TableQuery ?? config?.TableQuery ?? defaultQuery;
+
+        var generator = TableGenerator ?? dbType switch
+        {
+            DatabaseType.Oracle => new GenerateOracleTables(connectionString),
+            DatabaseType.PostgreSql => new GeneratePostgreSqlTables(connectionString),
+            DatabaseType.MySql => new GenerateMySqlTables(connectionString),
+            _ => new GenerateSqlServerTables(connectionString)
+        };
         var tables = generator.Execute(query);
         // add a check for empty tables
         if (tables == null || tables.Count == 0)

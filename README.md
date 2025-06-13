@@ -61,14 +61,15 @@ dotnet build
 
 ## Configuration
 
-The application reads its settings from an `appsettings.json` file placed next to the executable. The file must define a connection string and the SQL query used to list the tables that will be diagrammed.
+The application reads its settings from an `appsettings.json` file placed next to the executable. The file must define a connection string, the SQL query used to list the tables, and the database type.
 
 Example `DB2ERD/appsettings.json`:
 
 ```json
 {
   "ConnectionString": "Data Source=MACHINENAME;Initial Catalog=AdventureWorks2014;User ID=sa;Password=MYPASSWORD;Connect Timeout=30;",
-  "TableQuery": "SELECT schema_id, SCHEMA_NAME(schema_id) as [schema_name], name as table_name, object_id, '['+SCHEMA_NAME(schema_id)+'].['+name+']' AS full_name FROM sys.tables where is_ms_shipped = 0"
+  "TableQuery": "SELECT schema_id, SCHEMA_NAME(schema_id) as [schema_name], name as table_name, object_id, '['+SCHEMA_NAME(schema_id)+'].['+name+']' AS full_name FROM sys.tables where is_ms_shipped = 0",
+  "DatabaseType": "SqlServer"
 }
 ```
 
@@ -83,6 +84,7 @@ dotnet DB2ERD.dll \
     --config appsettings.json \
     --connection-string "Server=.;Database=MyDb;Trusted_Connection=True;" \
     --table-query "SELECT ..." \
+    --dbtype SqlServer \
     --output diagram.puml
 ```
 
@@ -93,6 +95,7 @@ PS> .\DB2ERD.exe `
     --config appsettings.json `
     --connection-string "Server=.;Database=MyDb;Trusted_Connection=True;" `
     --table-query "SELECT ..." `
+    --dbtype SqlServer `
     --output diagram.puml
 ```
 
@@ -112,5 +115,11 @@ If the command is not on your `PATH`, locate it using `which plantuml` on Linux
 or `Get-Command plantuml` in PowerShell and invoke it directly.
 
 ## Supported Databases
+DB2ERD can read metadata from multiple relational databases. Specify the database type using the `--dbtype` option or the `DatabaseType` property in `appsettings.json`.
 
-The current implementation targets Microsoft SQL Server exclusively.  The code could be adapted for other relational databases, but out‑of‑the‑box support is limited to SQL Server.
+Supported values:
+
+- `SqlServer`
+- `Oracle`
+- `PostgreSql`
+- `MySql`

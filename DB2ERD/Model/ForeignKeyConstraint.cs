@@ -5,6 +5,11 @@ namespace DB2ERD.Model
     /// <summary>
     /// Represents a foreign key constraint relationship between two tables.
     /// </summary>
+    /// <remarks>
+    /// Note: This class uses snake_case for public properties to maintain compatibility
+    /// with database constraint metadata and existing code. While this differs from C#
+    /// naming conventions, it simplifies mapping and reduces the need for annotations.
+    /// </remarks>
     [DebuggerDisplay("FK = {foreign_key_name}")]
     public class ForeignKeyConstraint
     {

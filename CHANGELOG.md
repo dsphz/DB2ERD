@@ -15,10 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed Hungarian notation from field names for better code readability
 - Improved code consistency across all database generators
 - Updated field naming to use modern C# conventions (`_connectionString` instead of `m_connStr`)
+- Refactored PlantUML generation code to eliminate duplication (reduced from ~230 lines to ~160 lines)
 
-### Documentation
+### Added
+- Added comprehensive XML documentation to all public APIs
 - Added CONTRIBUTING.md with guidelines for contributors
 - Added CHANGELOG.md to track project changes
+- Added .editorconfig for consistent code style
+- Added CI badge to README
+- Added security and contributing sections to README
+
+### Note on Naming Conventions
+Model classes (SqlTable, SqlColumn, ForeignKeyConstraint) intentionally use snake_case for public properties to maintain compatibility with database metadata column names and existing code. While this differs from standard C# conventions, it simplifies data mapping and reduces the need for additional annotations. Future major versions may consider a migration to PascalCase with appropriate mapping attributes.
 
 ## Previous Releases
 

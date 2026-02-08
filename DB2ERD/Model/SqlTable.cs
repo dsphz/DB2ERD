@@ -5,6 +5,11 @@ namespace DB2ERD.Model
     /// <summary>
     /// Represents a database table with its columns and relationships.
     /// </summary>
+    /// <remarks>
+    /// Note: This class uses snake_case for public properties to maintain compatibility
+    /// with database table metadata and existing code. While this differs from C# naming
+    /// conventions, it simplifies mapping and reduces the need for annotations.
+    /// </remarks>
     [DebuggerDisplay("Schema = {schema_name}, TableName = {table_name}")]
     public class SqlTable
     {

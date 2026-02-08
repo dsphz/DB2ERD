@@ -5,6 +5,11 @@ namespace DB2ERD.Model
     /// <summary>
     /// Represents a database column with its metadata.
     /// </summary>
+    /// <remarks>
+    /// Note: This class uses snake_case for public properties to maintain compatibility
+    /// with database column naming conventions and existing code. While this differs from
+    /// C# naming conventions, it simplifies mapping and reduces the need for annotations.
+    /// </remarks>
     [DebuggerDisplay("ColumnName = {column_name}, DataType = {data_type}")]
     public class SqlColumn
     {

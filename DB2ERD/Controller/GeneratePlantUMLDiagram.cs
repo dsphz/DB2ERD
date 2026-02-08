@@ -7,6 +7,9 @@ using System.Collections.Generic;
 
 namespace DB2ERD.Controller
 {
+    /// <summary>
+    /// Provides methods to generate PlantUML diagram descriptions from database table metadata.
+    /// </summary>
     public static class GeneratePlantUMLDiagram
     {
         private const string PlantUmlHeader = @"@startuml
@@ -15,6 +18,16 @@ namespace DB2ERD.Controller
 !define column(x) <color:#efefef><&media-record></color> x
 !define table(x) entity x << (T, white) >>";
 
+        /// <summary>
+        /// Generates PlantUML diagram description for all specified tables.
+        /// </summary>
+        /// <param name="tableList">List of tables to include in the diagram.</param>
+        /// <param name="title">Title for the diagram (not currently used in output).</param>
+        /// <param name="fileName">Path to the output PlantUML file.</param>
+        /// <param name="excludeRelationshipsToTablesThatDontExist">
+        /// When true, excludes relationships to tables not in the tableList.
+        /// </param>
+        /// <returns>The generated PlantUML text.</returns>
         public static string GenerateAllTables(List<SqlTable> tableList, string title, string fileName, bool excludeRelationshipsToTablesThatDontExist = false)
         {
             var sb = new StringBuilder();
@@ -64,6 +77,14 @@ namespace DB2ERD.Controller
             return text;
         }
 
+        /// <summary>
+        /// Generates PlantUML diagram description for tables that have no relationships.
+        /// Excludes tables that have either foreign keys or are referenced by other tables.
+        /// </summary>
+        /// <param name="tableList">List of tables to process.</param>
+        /// <param name="title">Title for the diagram (not currently used in output).</param>
+        /// <param name="fileName">Path to the output PlantUML file.</param>
+        /// <returns>The generated PlantUML text.</returns>
         public static string GenerateTablesWithNoRelationships(List<SqlTable> tableList, string title, string fileName)
         {
             var sb = new StringBuilder();
@@ -137,6 +158,14 @@ namespace DB2ERD.Controller
             return text;
         }
 
+        /// <summary>
+        /// Generates PlantUML diagram description for all tables that have relationships.
+        /// Only includes tables that either have foreign keys or are referenced by other tables.
+        /// </summary>
+        /// <param name="tableList">List of tables to process.</param>
+        /// <param name="title">Title for the diagram (not currently used in output).</param>
+        /// <param name="fileName">Path to the output PlantUML file.</param>
+        /// <returns>The generated PlantUML text.</returns>
         public static string GenerateAllRelationships(List<SqlTable> tableList, string title, string fileName)
         {
             var sb = new StringBuilder();

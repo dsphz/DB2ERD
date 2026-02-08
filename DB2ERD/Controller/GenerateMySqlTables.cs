@@ -55,11 +55,11 @@ namespace DB2ERD.Controller
 
         private void GetTableColumns(MySqlConnection conn, SqlTable table)
         {
-            var sql = $@"SELECT column_name, is_nullable, data_type
+            var sql = @"SELECT column_name, is_nullable, data_type
                 FROM information_schema.columns
-                WHERE table_schema = '{table.schema_name}' AND table_name = '{table.table_name}'
+                WHERE table_schema = @schemaName AND table_name = @tableName
                 ORDER BY ordinal_position";
-            var list = conn.Query<dynamic>(sql);
+            var list = conn.Query<dynamic>(sql, new { schemaName = table.schema_name, tableName = table.table_name });
             foreach (var row in list)
             {
                 table.columnList.Add(new SqlColumn
@@ -73,11 +73,11 @@ namespace DB2ERD.Controller
 
         private void GetTablePrimaryKeys(MySqlConnection conn, SqlTable table)
         {
-            var sql = $@"SELECT k.column_name AS primary_key_column
+            var sql = @"SELECT k.column_name AS primary_key_column
                 FROM information_schema.table_constraints t
                 JOIN information_schema.key_column_usage k ON t.constraint_name = k.constraint_name AND t.table_schema = k.table_schema
-                WHERE t.table_schema = '{table.schema_name}' AND t.table_name = '{table.table_name}' AND t.constraint_type = 'PRIMARY KEY'";
-            var list = conn.Query<dynamic>(sql);
+                WHERE t.table_schema = @schemaName AND t.table_name = @tableName AND t.constraint_type = 'PRIMARY KEY'";
+            var list = conn.Query<dynamic>(sql, new { schemaName = table.schema_name, tableName = table.table_name });
             foreach (var row in list)
             {
                 var col = table.columnList.FirstOrDefault(c => c.column_name == row.primary_key_column);
@@ -88,11 +88,11 @@ namespace DB2ERD.Controller
 
         private void GetTableForeignKeys(MySqlConnection conn, SqlTable table)
         {
-            var sql = $@"SELECT k.column_name AS foreign_key_column
+            var sql = @"SELECT k.column_name AS foreign_key_column
                 FROM information_schema.table_constraints t
                 JOIN information_schema.key_column_usage k ON t.constraint_name = k.constraint_name AND t.table_schema = k.table_schema
-                WHERE t.table_schema = '{table.schema_name}' AND t.table_name = '{table.table_name}' AND t.constraint_type = 'FOREIGN KEY'";
-            var list = conn.Query<dynamic>(sql);
+                WHERE t.table_schema = @schemaName AND t.table_name = @tableName AND t.constraint_type = 'FOREIGN KEY'";
+            var list = conn.Query<dynamic>(sql, new { schemaName = table.schema_name, tableName = table.table_name });
             foreach (var row in list)
             {
                 var col = table.columnList.FirstOrDefault(c => c.column_name == row.foreign_key_column);
@@ -103,7 +103,7 @@ namespace DB2ERD.Controller
 
         private void GetForeignKeyConstraint(MySqlConnection conn, SqlTable table)
         {
-            var sql = $@"SELECT 0 AS object_id,
+            var sql = @"SELECT 0 AS object_id,
                     0 AS parent_object_id,
                     k.table_schema AS fk_schema_name,
                     k.table_name AS fk_table_name,
@@ -111,8 +111,8 @@ namespace DB2ERD.Controller
                     k.referenced_table_schema AS pk_schema_name,
                     k.referenced_table_name AS pk_table_name
                 FROM information_schema.key_column_usage k
-                WHERE k.table_schema = '{table.schema_name}' AND k.table_name = '{table.table_name}' AND k.referenced_table_name IS NOT NULL";
-            table.foreign_key_list = conn.Query<ForeignKeyConstraint>(sql).ToList();
+                WHERE k.table_schema = @schemaName AND k.table_name = @tableName AND k.referenced_table_name IS NOT NULL";
+            table.foreign_key_list = conn.Query<ForeignKeyConstraint>(sql, new { schemaName = table.schema_name, tableName = table.table_name }).ToList();
         }
     }
 }

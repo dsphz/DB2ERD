@@ -55,8 +55,8 @@ namespace DB2ERD.Controller
 
         private void GetTableColumns(OracleConnection conn, SqlTable table)
         {
-            var sql = $"SELECT COLUMN_NAME, NULLABLE AS IS_NULLABLE, DATA_TYPE FROM ALL_TAB_COLUMNS WHERE OWNER = '{table.schema_name}' AND TABLE_NAME = '{table.table_name}' ORDER BY COLUMN_ID";
-            var list = conn.Query<dynamic>(sql);
+            var sql = "SELECT COLUMN_NAME, NULLABLE AS IS_NULLABLE, DATA_TYPE FROM ALL_TAB_COLUMNS WHERE OWNER = :schemaName AND TABLE_NAME = :tableName ORDER BY COLUMN_ID";
+            var list = conn.Query<dynamic>(sql, new { schemaName = table.schema_name, tableName = table.table_name });
             foreach (var row in list)
             {
                 table.columnList.Add(new SqlColumn
@@ -70,13 +70,13 @@ namespace DB2ERD.Controller
 
         private void GetTablePrimaryKeys(OracleConnection conn, SqlTable table)
         {
-            var sql = $@"SELECT cols.column_name AS primary_key_column
+            var sql = @"SELECT cols.column_name AS primary_key_column
                 FROM all_constraints cons
                 JOIN all_cons_columns cols ON cons.constraint_name = cols.constraint_name AND cons.owner = cols.owner
                 WHERE cons.constraint_type = 'P'
-                    AND cons.owner = '{table.schema_name}'
-                    AND cons.table_name = '{table.table_name}'";
-            var list = conn.Query<dynamic>(sql);
+                    AND cons.owner = :schemaName
+                    AND cons.table_name = :tableName";
+            var list = conn.Query<dynamic>(sql, new { schemaName = table.schema_name, tableName = table.table_name });
             foreach (var row in list)
             {
                 var col = table.columnList.FirstOrDefault(c => c.column_name == row.PRIMARY_KEY_COLUMN);
@@ -87,13 +87,13 @@ namespace DB2ERD.Controller
 
         private void GetTableForeignKeys(OracleConnection conn, SqlTable table)
         {
-            var sql = $@"SELECT cols.column_name AS foreign_key_column
+            var sql = @"SELECT cols.column_name AS foreign_key_column
                 FROM all_constraints cons
                 JOIN all_cons_columns cols ON cons.constraint_name = cols.constraint_name AND cons.owner = cols.owner
                 WHERE cons.constraint_type = 'R'
-                    AND cons.owner = '{table.schema_name}'
-                    AND cons.table_name = '{table.table_name}'";
-            var list = conn.Query<dynamic>(sql);
+                    AND cons.owner = :schemaName
+                    AND cons.table_name = :tableName";
+            var list = conn.Query<dynamic>(sql, new { schemaName = table.schema_name, tableName = table.table_name });
             foreach (var row in list)
             {
                 var col = table.columnList.FirstOrDefault(c => c.column_name == row.FOREIGN_KEY_COLUMN);
@@ -104,7 +104,7 @@ namespace DB2ERD.Controller
 
         private void GetForeignKeyConstraint(OracleConnection conn, SqlTable table)
         {
-            var sql = $@"SELECT
+            var sql = @"SELECT
                     0 AS object_id,
                     0 AS parent_object_id,
                     fk.owner AS fk_schema_name,
@@ -115,9 +115,9 @@ namespace DB2ERD.Controller
                 FROM all_constraints fk
                 JOIN all_constraints pk ON fk.r_constraint_name = pk.constraint_name AND fk.r_owner = pk.owner
                 WHERE fk.constraint_type = 'R'
-                    AND fk.owner = '{table.schema_name}'
-                    AND fk.table_name = '{table.table_name}'";
-            table.foreign_key_list = conn.Query<ForeignKeyConstraint>(sql).ToList();
+                    AND fk.owner = :schemaName
+                    AND fk.table_name = :tableName";
+            table.foreign_key_list = conn.Query<ForeignKeyConstraint>(sql, new { schemaName = table.schema_name, tableName = table.table_name }).ToList();
         }
     }
 }

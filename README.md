@@ -1,10 +1,13 @@
 # DB2ERD
 
+[![CI](https://github.com/dsphz/DB2ERD/actions/workflows/ci.yml/badge.svg)](https://github.com/dsphz/DB2ERD/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/dsphz/DB2ERD)](LICENSE)
+
 **Updated for .NET 8**
 
 ## Project Overview
 
-DB2ERD is a lightweight command‑line tool that reads table metadata from a Microsoft SQL Server database and produces a PlantUML description of the schema.  It is useful for DBAs, architects and developers who want to keep Entity Relationship Diagrams (ERDs) in sync with their database without using heavyweight modelling tools.
+DB2ERD is a lightweight command‑line tool that reads table metadata from relational databases and produces PlantUML descriptions of the schema. It is useful for DBAs, architects and developers who want to keep Entity Relationship Diagrams (ERDs) in sync with their database without using heavyweight modelling tools.
 
 Example Output:
 
@@ -18,12 +21,12 @@ The PlantUML website also has an online server which you can find [here](https:/
 
 Earlier revisions of this repository included a copy of `plantuml.exe` for convenience. The executable has been removed, so you now need to install PlantUML yourself. Instructions are provided below.
 
-Inspiration For this project was from this blogpost: https://raphael-leger.medium.com/automatically-generating-up-to-date-database-diagrams-with-typeorm-d1279a20545e
+Inspiration for this project was from this blogpost: https://raphael-leger.medium.com/automatically-generating-up-to-date-database-diagrams-with-typeorm-d1279a20545e
 
 ## Prerequisites
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/)
-- Access to a Microsoft SQL Server instance (2012 or later) with permissions to query `INFORMATION_SCHEMA` and `sys` tables
+- Access to a relational database with permissions to query metadata tables
 - Ability to create files in the working directory for the generated diagram
 - PlantUML command line available on your `PATH` (see [Installing PlantUML](#installing-plantuml))
 
@@ -119,7 +122,24 @@ DB2ERD can read metadata from multiple relational databases. Specify the databas
 
 Supported values:
 
-- `SqlServer`
-- `Oracle`
-- `PostgreSql`
-- `MySql`
+- `SqlServer` - Microsoft SQL Server 2012 or later
+- `Oracle` - Oracle Database
+- `PostgreSql` - PostgreSQL
+- `MySql` - MySQL/MariaDB
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute to this project.
+
+## Security
+
+This tool uses parameterized queries to prevent SQL injection attacks. All user inputs are properly sanitized before being used in database queries. If you discover a security vulnerability, please report it privately to the maintainers.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a list of changes in each version.
+
+## License
+
+This project is licensed under the terms specified in the [LICENSE](LICENSE) file.
+

@@ -55,11 +55,11 @@ namespace DB2ERD.Controller
 
         private void GetTableColumns(NpgsqlConnection conn, SqlTable table)
         {
-            var sql = $@"SELECT column_name, is_nullable, data_type
+            var sql = @"SELECT column_name, is_nullable, data_type
                 FROM information_schema.columns
-                WHERE table_schema = '{table.schema_name}' AND table_name = '{table.table_name}'
+                WHERE table_schema = @schemaName AND table_name = @tableName
                 ORDER BY ordinal_position";
-            var list = conn.Query<dynamic>(sql);
+            var list = conn.Query<dynamic>(sql, new { schemaName = table.schema_name, tableName = table.table_name });
             foreach (var row in list)
             {
                 table.columnList.Add(new SqlColumn
@@ -73,13 +73,13 @@ namespace DB2ERD.Controller
 
         private void GetTablePrimaryKeys(NpgsqlConnection conn, SqlTable table)
         {
-            var sql = $@"SELECT kcu.column_name AS primary_key_column
+            var sql = @"SELECT kcu.column_name AS primary_key_column
                 FROM information_schema.table_constraints tc
                 JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name
-                WHERE tc.table_schema = '{table.schema_name}'
-                    AND tc.table_name = '{table.table_name}'
+                WHERE tc.table_schema = @schemaName
+                    AND tc.table_name = @tableName
                     AND tc.constraint_type = 'PRIMARY KEY'";
-            var list = conn.Query<dynamic>(sql);
+            var list = conn.Query<dynamic>(sql, new { schemaName = table.schema_name, tableName = table.table_name });
             foreach (var row in list)
             {
                 var col = table.columnList.FirstOrDefault(c => c.column_name == row.primary_key_column);
@@ -90,13 +90,13 @@ namespace DB2ERD.Controller
 
         private void GetTableForeignKeys(NpgsqlConnection conn, SqlTable table)
         {
-            var sql = $@"SELECT kcu.column_name AS foreign_key_column
+            var sql = @"SELECT kcu.column_name AS foreign_key_column
                 FROM information_schema.table_constraints tc
                 JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name
-                WHERE tc.table_schema = '{table.schema_name}'
-                    AND tc.table_name = '{table.table_name}'
+                WHERE tc.table_schema = @schemaName
+                    AND tc.table_name = @tableName
                     AND tc.constraint_type = 'FOREIGN KEY'";
-            var list = conn.Query<dynamic>(sql);
+            var list = conn.Query<dynamic>(sql, new { schemaName = table.schema_name, tableName = table.table_name });
             foreach (var row in list)
             {
                 var col = table.columnList.FirstOrDefault(c => c.column_name == row.foreign_key_column);
@@ -107,7 +107,7 @@ namespace DB2ERD.Controller
 
         private void GetForeignKeyConstraint(NpgsqlConnection conn, SqlTable table)
         {
-            var sql = $@"SELECT 0 AS object_id,
+            var sql = @"SELECT 0 AS object_id,
                     0 AS parent_object_id,
                     tc.table_schema AS fk_schema_name,
                     tc.table_name AS fk_table_name,
@@ -117,10 +117,10 @@ namespace DB2ERD.Controller
                 FROM information_schema.table_constraints tc
                 JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name
                 JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = tc.constraint_name
-                WHERE tc.table_schema = '{table.schema_name}'
-                    AND tc.table_name = '{table.table_name}'
+                WHERE tc.table_schema = @schemaName
+                    AND tc.table_name = @tableName
                     AND tc.constraint_type = 'FOREIGN KEY'";
-            table.foreign_key_list = conn.Query<ForeignKeyConstraint>(sql).ToList();
+            table.foreign_key_list = conn.Query<ForeignKeyConstraint>(sql, new { schemaName = table.schema_name, tableName = table.table_name }).ToList();
         }
     }
 }

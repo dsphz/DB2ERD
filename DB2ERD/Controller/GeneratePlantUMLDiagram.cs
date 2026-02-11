@@ -28,7 +28,7 @@ namespace DB2ERD.Controller
         /// When true, excludes relationships to tables not in the tableList.
         /// </param>
         /// <returns>The generated PlantUML text.</returns>
-        public static string GenerateAllTables(List<SqlTable> tableList, string title, string fileName, bool excludeRelationshipsToTablesThatDontExist = false)
+        public static string GenerateAllTables(List<SqlTable> tableList, string title, string fileName = "", bool excludeRelationshipsToTablesThatDontExist = false)
         {
             return GenerateDiagram(tableList, fileName, excludeRelationshipsToTablesThatDontExist);
         }
@@ -41,7 +41,7 @@ namespace DB2ERD.Controller
         /// <param name="title">Title for the diagram (not currently used in output).</param>
         /// <param name="fileName">Path to the output PlantUML file.</param>
         /// <returns>The generated PlantUML text.</returns>
-        public static string GenerateTablesWithNoRelationships(List<SqlTable> tableList, string title, string fileName)
+        public static string GenerateTablesWithNoRelationships(List<SqlTable> tableList, string title, string fileName = "")
         {
             var isolatedTables = FilterIsolatedTables(tableList);
             return GenerateDiagram(isolatedTables, fileName, false);
@@ -55,7 +55,7 @@ namespace DB2ERD.Controller
         /// <param name="title">Title for the diagram (not currently used in output).</param>
         /// <param name="fileName">Path to the output PlantUML file.</param>
         /// <returns>The generated PlantUML text.</returns>
-        public static string GenerateAllRelationships(List<SqlTable> tableList, string title, string fileName)
+        public static string GenerateAllRelationships(List<SqlTable> tableList, string title, string fileName = "")
         {
             var relatedTables = FilterRelatedTables(tableList);
             return GenerateDiagram(relatedTables, fileName, false);
@@ -120,7 +120,10 @@ namespace DB2ERD.Controller
             sb.AppendLine("@enduml");
 
             var text = sb.ToString();
-            File.WriteAllText(fileName, text);
+            if (!string.IsNullOrWhiteSpace(fileName))
+            {
+                File.WriteAllText(fileName, text);
+            }
 
             return text;
         }

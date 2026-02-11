@@ -9,11 +9,15 @@ namespace DB2ERD.Controller
     public class GenerateSqlServerTables : ITableGenerator
     {
         private readonly string _connectionString;
+        private readonly bool _verbose;
+        private readonly bool _throwOnError;
         private List<SqlTable> _tableList = new List<SqlTable>();
 
-        public GenerateSqlServerTables(string dbConnString)
+        public GenerateSqlServerTables(string dbConnString, bool verbose = true, bool throwOnError = false)
         {
             _connectionString = dbConnString;
+            _verbose = verbose;
+            _throwOnError = throwOnError;
         }
 
         /// <inheritdoc />
@@ -40,7 +44,10 @@ namespace DB2ERD.Controller
                             if (tablesToInclude != null && !tablesToInclude.Contains(fullName))
                                 continue;
 
-                            AnsiConsole.MarkupLine($"[{row.schema_name}].[{row.table_name}]");
+                            if (_verbose)
+                            {
+                                AnsiConsole.MarkupLine($"[{row.schema_name}].[{row.table_name}]");
+                            }
 
                             var table = new SqlTable
                             {
@@ -60,14 +67,32 @@ namespace DB2ERD.Controller
                         }
                         catch (Exception ex)
                         {
-                            AnsiConsole.MarkupLine($"[red]Failed to process table {row.schema_name}.{row.table_name}: {ex.Message}[/]");
+                            if (_verbose)
+                            {
+                                AnsiConsole.MarkupLine($"[red]Failed to process table {row.schema_name}.{row.table_name}: {ex.Message}[/]");
+                            }
+
+                            if (_throwOnError)
+                            {
+                                throw new InvalidOperationException(
+                                    $"Failed to process table {row.schema_name}.{row.table_name}.",
+                                    ex);
+                            }
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                AnsiConsole.MarkupLine($"[red]Failed to execute table query: {ex.Message}[/]");
+                if (_verbose)
+                {
+                    AnsiConsole.MarkupLine($"[red]Failed to execute table query: {ex.Message}[/]");
+                }
+
+                if (_throwOnError)
+                {
+                    throw new InvalidOperationException("Failed to execute table query.", ex);
+                }
             }
 
             return _tableList;

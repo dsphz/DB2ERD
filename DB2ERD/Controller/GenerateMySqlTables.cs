@@ -9,11 +9,15 @@ namespace DB2ERD.Controller
     public class GenerateMySqlTables : ITableGenerator
     {
         private readonly string _connStr;
+        private readonly bool _verbose;
+        private readonly bool _throwOnError;
         private List<SqlTable> _tableList = new();
 
-        public GenerateMySqlTables(string connStr)
+        public GenerateMySqlTables(string connStr, bool verbose = true, bool throwOnError = false)
         {
             _connStr = connStr;
+            _verbose = verbose;
+            _throwOnError = throwOnError;
         }
 
         /// <inheritdoc />
@@ -32,7 +36,10 @@ namespace DB2ERD.Controller
                     if (tablesToInclude != null && !tablesToInclude.Contains(fullName))
                         continue;
 
-                    AnsiConsole.MarkupLine($"[{row.schema_name}].[{row.table_name}]");
+                    if (_verbose)
+                    {
+                        AnsiConsole.MarkupLine($"[{row.schema_name}].[{row.table_name}]");
+                    }
                     var table = new SqlTable
                     {
                         schema_name = row.schema_name,
@@ -48,7 +55,15 @@ namespace DB2ERD.Controller
             }
             catch (Exception ex)
             {
-                AnsiConsole.MarkupLine($"[red]Failed to execute table query: {ex.Message}[/]");
+                if (_verbose)
+                {
+                    AnsiConsole.MarkupLine($"[red]Failed to execute table query: {ex.Message}[/]");
+                }
+
+                if (_throwOnError)
+                {
+                    throw new InvalidOperationException("Failed to execute table query.", ex);
+                }
             }
             return _tableList;
         }

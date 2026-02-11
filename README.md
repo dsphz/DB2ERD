@@ -80,10 +80,67 @@ Update these values to match your environment before running the program.
 
 ## Usage
 
-Run the executable with options to override values from the configuration file:
+DB2ERD now supports both:
+
+- a legacy file-oriented command (`generate-file`, also the default command)
+- machine-friendly JSON commands that are suitable for MCP wrappers
+
+### MCP-friendly commands
+
+List supported databases and built-in introspection queries:
 
 ```bash
-dotnet DB2ERD.dll \
+dotnet DB2ERD.dll list-supported-databases --pretty-json
+```
+
+Read schema metadata as structured JSON:
+
+```bash
+dotnet DB2ERD.dll get-schema-metadata \
+    --config appsettings.json \
+    --connection-string "Server=.;Database=MyDb;Trusted_Connection=True;" \
+    --dbtype SqlServer \
+    --max-tables 200 \
+    --pretty-json
+```
+
+Generate PlantUML and return it in JSON (no file write unless requested):
+
+```bash
+dotnet DB2ERD.dll generate-erd-puml \
+    --config appsettings.json \
+    --connection-string "Server=.;Database=MyDb;Trusted_Connection=True;" \
+    --dbtype SqlServer \
+    --mode all-relationships \
+    --max-output-chars 200000 \
+    --pretty-json
+```
+
+Optional file output is explicit:
+
+```bash
+dotnet DB2ERD.dll generate-erd-puml \
+    --connection-string "Server=.;Database=MyDb;Trusted_Connection=True;" \
+    --dbtype SqlServer \
+    --output-file diagram.puml
+```
+
+By default, MCP-friendly commands use built-in read-only metadata queries. To run a custom table query, you must opt in explicitly:
+
+```bash
+dotnet DB2ERD.dll get-schema-metadata \
+    --connection-string "..." \
+    --dbtype SqlServer \
+    --allow-custom-query \
+    --table-query "SELECT ..."
+```
+
+### Legacy file-oriented command
+
+Run the legacy command explicitly:
+
+```bash
+dotnet DB2ERD.dll generate-file \
     --config appsettings.json \
     --connection-string "Server=.;Database=MyDb;Trusted_Connection=True;" \
     --table-query "SELECT ..." \
@@ -94,7 +151,7 @@ dotnet DB2ERD.dll \
 Or in PowerShell:
 
 ```powershell
-PS> .\DB2ERD.exe `
+PS> .\DB2ERD.exe generate-file `
     --config appsettings.json `
     --connection-string "Server=.;Database=MyDb;Trusted_Connection=True;" `
     --table-query "SELECT ..." `
@@ -106,9 +163,11 @@ If an option is omitted, the value from the specified configuration file is used
 
 ## Output
 
-The tool writes the PlantUML description to a file (for example `diagram.puml`).  This text file contains the tables and their relationships in PlantUML syntax.  You can feed the file to the [PlantUML](https://plantuml.com/) command line utility or any compatible viewer to generate visual diagrams in formats such as PNG or SVG.
+`generate-erd-puml` returns PlantUML as text in JSON by default and can optionally write a `.puml` file when `--output-file` is set.
 
-To render the diagram with the command line tool:
+`generate-file` writes the PlantUML description directly to a file (for example `diagram.puml`). This text file contains the tables and relationships in PlantUML syntax.
+
+To render a `.puml` file with the command line tool:
 
 ```bash
 plantuml diagram.puml
@@ -133,7 +192,9 @@ Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for gui
 
 ## Security
 
-This tool uses parameterized queries to prevent SQL injection attacks. All user inputs are properly sanitized before being used in database queries. If you discover a security vulnerability, please report it privately to the maintainers.
+DB2ERD uses parameterized queries for metadata lookups. MCP-friendly commands default to built-in introspection queries and require explicit opt-in (`--allow-custom-query`) before executing a custom `--table-query`.
+
+If you discover a security vulnerability, please report it privately to the maintainers.
 
 ## Changelog
 

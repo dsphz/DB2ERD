@@ -1,8 +1,8 @@
 using Spectre.Console;
 using Spectre.Console.Cli;
+using DB2ERD.Commands;
 using DB2ERD.Controller;
 using System.ComponentModel;
-
 using System.Text.Json;
 
 namespace DB2ERD;
@@ -11,7 +11,22 @@ internal class Program
 {
     public static int Main(string[] args)
     {
-        var app = new CommandApp<ErdGeneration>();
+        var app = new CommandApp();
+        app.Configure(config =>
+        {
+            config.SetApplicationName("db2erd");
+            config.SetDefaultCommand<ErdGeneration>();
+
+            config.AddCommand<ErdGeneration>("generate-file")
+                .WithDescription("Legacy file-oriented ERD generation command.");
+            config.AddCommand<ListSupportedDatabasesCommand>("list-supported-databases")
+                .WithDescription("List supported databases and default introspection queries.");
+            config.AddCommand<GetSchemaMetadataCommand>("get-schema-metadata")
+                .WithDescription("Return schema metadata as structured JSON.");
+            config.AddCommand<GenerateErdPumlCommand>("generate-erd-puml")
+                .WithDescription("Generate PlantUML text and return it as structured JSON.");
+        });
+
         return app.Run(args);
     }
 }
@@ -78,14 +93,7 @@ public class ErdGeneration : Command<ErdGeneration.Settings>
             return -1;
         }
 
-        var defaultQuery = dbType switch
-        {
-            DatabaseType.SqlServer => "SELECT schema_id, SCHEMA_NAME(schema_id) as [schema_name], name as table_name, object_id, '['+SCHEMA_NAME(schema_id)+'].['+name+']' AS full_name FROM sys.tables where is_ms_shipped = 0",
-            DatabaseType.Oracle => "SELECT owner AS schema_name, table_name, owner||'.'||table_name AS full_name FROM all_tables WHERE owner NOT IN ('SYS','SYSTEM')",
-            DatabaseType.PostgreSql => "SELECT table_schema AS schema_name, table_name, table_schema||'.'||table_name AS full_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema NOT IN ('pg_catalog','information_schema')",
-            DatabaseType.MySql => "SELECT table_schema AS schema_name, table_name, CONCAT(table_schema,'.',table_name) AS full_name FROM information_schema.tables WHERE table_type='BASE TABLE' AND table_schema = DATABASE()",
-            _ => string.Empty
-        };
+        var defaultQuery = DatabaseCommandSupport.GetDefaultTableQuery(dbType);
 
         // Prefer a query passed on the command line. If none is specified,
         // look for one in the configuration file. When both are missing or

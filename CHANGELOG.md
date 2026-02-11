@@ -24,6 +24,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added .editorconfig for consistent code style
 - Added CI badge to README
 - Added security and contributing sections to README
+- Added MCP-friendly CLI commands:
+  - `list-supported-databases` for capability discovery
+  - `get-schema-metadata` for structured schema JSON
+  - `generate-erd-puml` for structured PlantUML JSON with optional file output
+
+### MCP Readiness
+- Added structured JSON success/error envelopes for machine callers
+- Added bounded response controls with `--max-tables` and `--max-output-chars`
+- Added explicit custom SQL opt-in with `--allow-custom-query` for safer defaults
+- Added generator flags for silent mode and fail-fast error propagation in machine workflows
 
 ### Note on Naming Conventions
 Model classes (SqlTable, SqlColumn, ForeignKeyConstraint) intentionally use snake_case for public properties to maintain compatibility with database metadata column names and existing code. While this differs from standard C# conventions, it simplifies data mapping and reduces the need for additional annotations. Future major versions may consider a migration to PascalCase with appropriate mapping attributes.
